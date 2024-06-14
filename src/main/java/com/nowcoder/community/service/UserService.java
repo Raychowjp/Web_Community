@@ -33,6 +33,7 @@ public class UserService implements CommunityConstant {
     @Autowired
     private LoginTicketMapper loginTicketMapper;
 
+
     @Value("${community.path.domain}")
     private String domain;
 
@@ -107,10 +108,61 @@ public class UserService implements CommunityConstant {
         }
 
     }
+    //登录的封装
+    public Map<String, Object> login(String username, String password, int expiredSeconds){
+        Map<String, Object> map = new HashMap<>(); //键的类型为 String，值的类型为 Object
+        //空值的处理
+        if (StringUtils.isBlank(username)){
+            map.put("usernameMsg", "account can not be null");
+            return map;
+        }
+        if (StringUtils.isBlank(password)){
+            map.put("passwordMsg", "password can not be null");
+            return map;
+        }
+
+        //验证账号密码
+        User user = userMapper.selectByName(username);
+        if (user == null){  //数据库没有这个用户的信息
+            map.put("usernameMsg", "the user does not exist");
+            return map;
+        }
+
+        if(user.getStatus() == 0){
+            map.put("usernameMsg","this account is not activated");
+            return map;
+        }
+
+        password = CommunityUtil.md5(password + user.getSalt());
+        if (!user.getPassword().equals(password)){
+            map.put("passwordMsg","password is wrong");
+            return map;
+        }
+        //在loginticket表里生成用户的数据
+        LoginTicket loginTicket = new LoginTicket();
+        loginTicket.setUserId(user.getId());
+        loginTicket.setTicket(CommunityUtil.generateUUID());
+        loginTicket.setStatus(0);
+        loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000)); //换算成毫秒；
+        loginTicketMapper.insertLoginTicket(loginTicket);
+        map.put("ticket",loginTicket.getTicket());
+        return map;
+    }
+
+    //logout-status:1
+    public void logout(String ticket){
+        loginTicketMapper.updateStatus(ticket, 1);
+    }
+
     public LoginTicket findLoginTicket(String ticket){
         return loginTicketMapper.selectByTicket(ticket);
     }
 
+
+    //更新头像
+    public int updateHeader(int userId, String headerUrl ){ //返回行数
+        return userMapper.updateHeader(userId, headerUrl);
+    }
 
 
 
