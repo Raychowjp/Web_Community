@@ -3,6 +3,7 @@ package com.nowcoder.community.controller;
 import com.nowcoder.community.entity.User;
 import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CommunityConstant;
+import com.nowcoder.community.util.HostHolder;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -12,10 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 import com.google.code.kaptcha.Producer;
 import javax.imageio.ImageIO;
@@ -34,6 +32,9 @@ public class LoginController implements CommunityConstant {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private HostHolder hostHolder;
 
     @Autowired
     private Producer kaptchaProducer;
@@ -64,7 +65,7 @@ public class LoginController implements CommunityConstant {
 
     }
     @RequestMapping(path = "/activation/{userid}/{code}", method = RequestMethod.GET)
-    public String activation(Model model, @PathVariable("userid") int userId, @PathVariable("code") int code){
+    public String activation(Model model, @PathVariable("userid") int userId, @PathVariable("code") String code){
         int result = userService.activation(userId, code);
         if (result == Activation_Success) {
             model.addAttribute("msg", "激活成功!");
@@ -95,9 +96,9 @@ public class LoginController implements CommunityConstant {
         }
     }
 
-//登录信息的提交
+    //登录信息的提交
     @RequestMapping(path = "/login", method = RequestMethod.POST)
-    public String login(String username, String password, String code, boolean rememberme, Model model, HttpSession session, HttpServletResponse response){
+    public String login(@RequestParam("username") String username, @RequestParam("password") String password, @RequestParam("code") String code, @RequestParam(name = "rememberme", defaultValue = "false")  boolean rememberme, Model model, HttpSession session, HttpServletResponse response){
         //检查验证码
         String kaptcha = (String)session.getAttribute("kaptcha"); //session 得到object类型，强制转换为string
         if (StringUtils.isBlank(kaptcha) || StringUtils.isBlank(code) || !kaptcha.equalsIgnoreCase(code)){
@@ -112,8 +113,14 @@ public class LoginController implements CommunityConstant {
             cookie.setPath(contextPath);
             cookie.setMaxAge(expiredSeconds);
             response.addCookie(cookie);
-            return "/redirect:/index";
+//            User user = (User) map.get("user");
+//            hostHolder.setUsers(user);
+//            System.out.println("getUser");
+//            System.out.println(hostHolder.getUser());
+            return "redirect:/index";
+
         } else{
+            System.out.println("22");
             model.addAttribute("usernameMsg",map.get("usernameMsg"));
             model.addAttribute("passwordMsg",map.get("passwordMsg"));
             return "/site/login";
@@ -123,8 +130,9 @@ public class LoginController implements CommunityConstant {
     @RequestMapping(path = "/logout", method = RequestMethod.GET)
     private String logout(@CookieValue("ticket") String ticket){
         userService.logout(ticket);
-        return "/redirect:/login";
+        return "redirect:/login";
     }
 
 
 }
+

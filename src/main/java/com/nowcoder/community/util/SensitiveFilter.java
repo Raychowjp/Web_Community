@@ -22,16 +22,15 @@ public class SensitiveFilter {
     @PostConstruct
     public void init(){
         //读取到敏感词文本里的敏感词并加载到内存中
-        try(
-                InputStream is = this.getClass().getClassLoader().getResourceAsStream("sensitivewords.txt");
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                ){
-            String keyword;
-            while ((keyword = reader.readLine()) != null){
-                this.addKeyword(keyword);
-            }
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("sensitive-words.txt")) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+                String keyword;
+                while ((keyword = reader.readLine()) != null) {
+                    this.addKeyword(keyword);
+                }
 
-        }catch(IOException e){
+            }
+        } catch (IOException e) {
             logger.error("加载敏感词文件失败" + e.getMessage());
         }
 
@@ -136,3 +135,5 @@ public class SensitiveFilter {
         }
     }
 }
+
+

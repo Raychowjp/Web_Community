@@ -20,6 +20,11 @@ public class LoginRequiredInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (handler instanceof HandlerMethod) { //如果拦截到的是方法，把拦截到的method的对象拿出来
+
+            System.out.println(request);
+            System.out.println(request.getHeaderNames());
+            System.out.println(request.toString());
+            System.out.println(request.getMethod());
             HandlerMethod handlerMethod = (HandlerMethod) handler;
             Method method = handlerMethod.getMethod();
             LoginRequired loginRequired = method.getAnnotation(LoginRequired.class);

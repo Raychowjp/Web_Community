@@ -66,6 +66,10 @@ public class UserService implements CommunityConstant {
         //验证账号是否存在
         User u = userMapper.selectByName(user.getUsername());
         if (u != null) {
+            System.out.println(u.getUsername());
+            System.out.println(u.getId());
+            System.out.println(u.getEmail());
+            System.out.println(u.getCreateTime());
             map.put("usernameMsg", "该账号已存在");
             return map;
         }
@@ -96,7 +100,7 @@ public class UserService implements CommunityConstant {
         mailClient.sendMail(user.getEmail(), "激活账号", content);
         return map;
     }
-    public int activation(int userid, int code){
+    public int activation(int userid, String code){
         User user = userMapper.selectById((userid));
         if (user.getStatus() == 1){
             return Activation_Repeated;
@@ -123,6 +127,7 @@ public class UserService implements CommunityConstant {
 
         //验证账号密码
         User user = userMapper.selectByName(username);
+        System.out.println("130" + user);
         if (user == null){  //数据库没有这个用户的信息
             map.put("usernameMsg", "the user does not exist");
             return map;
@@ -146,6 +151,8 @@ public class UserService implements CommunityConstant {
         loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000)); //换算成毫秒；
         loginTicketMapper.insertLoginTicket(loginTicket);
         map.put("ticket",loginTicket.getTicket());
+        map.put("user", user);
+        System.out.println("user-service" + loginTicket);
         return map;
     }
 
